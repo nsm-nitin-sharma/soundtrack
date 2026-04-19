@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Songs | Turn Memories into Music</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Manrope:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'], serif: ['Lora', 'serif'] },
+                    colors: {
+                        dark: '#120B0A',
+                        light: '#FEF6E4',
+                        accent: '#F59E0B',
+                        rose: '#EC4899'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #120B0A;
+            color: #FEF6E4;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        a,
+        button,
+        .word-hover {
+            cursor: none;
+        }
+
+        /* Custom Cursor (Hidden on Mobile) */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #F59E0B;
+            box-shadow: 0 0 10px #F59E0B;
+        }
+
+        .cursor-outline {
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+        }
+
+        .cursor-hover .cursor-outline {
+            width: 65px;
+            height: 65px;
+            background-color: rgba(245, 158, 11, 0.1);
+            border-color: #F59E0B;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Ambient Glowing Auras */
+        .aura-1,
+        .aura-2 {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -2;
+            opacity: 0.4;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        .aura-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, #F59E0B, transparent 70%);
+            animation-delay: 0s;
+        }
+
+        .aura-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, #EC4899, transparent 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(10%, 15%) scale(1.2);
+            }
+        }
+
+        /* Film Grain */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+
+        /* Canvas Particle Background */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        /* Hero Parallax Environment */
+        .hero-bg {
+            position: absolute;
+            inset: -5%;
+            width: 110%;
+            height: 110%;
+            background: linear-gradient(to bottom, rgba(18, 11, 10, 0.4), #120B0A), url('https://images.unsplash.com/photo-1525201548942-d8732f6617a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+            z-index: -2;
+            will-change: transform;
+        }
+
+        /* Text Masking */
+        .reveal-text {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+            line-height: 1.2;
+        }
+
+        .reveal-inner {
+            display: inline-block;
+            transform: translateY(110%);
+        }
+
+        /* Cheerful Audio Visualizer */
+        .visualizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 14px;
+        }
+
+        .bar {
+            width: 3px;
+            border-radius: 2px;
+            animation: bounce 0.8s infinite alternate ease-in-out;
+        }
+
+        .bar:nth-child(1) {
+            background: #F59E0B;
+        }
+
+        .bar:nth-child(2) {
+            background: #EC4899;
+            animation-delay: 0.2s;
+        }
+
+        .bar:nth-child(3) {
+            background: #FCD34D;
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0% {
+                height: 4px;
+            }
+
+            100% {
+                height: 14px;
+            }
+        }
+
+        /* Image Reveal */
+        .image-reveal {
+            clip-path: inset(100% 0 0 0);
+        }
+
+        /* Responsive Infinite Marquee */
+        .marquee-container {
+            border-top: 1px solid rgba(245, 158, 11, 0.2);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+            padding: 1rem 0;
+            overflow: hidden;
+            display: flex;
+            white-space: nowrap;
+            background: rgba(18, 11, 10, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .marquee-content {
+            font-size: 1.5rem;
+            font-family: 'Lora', serif;
+            font-style: italic;
+            color: #F59E0B;
+            display: flex;
+            gap: 2rem;
+            padding-right: 2rem;
+            opacity: 0.8;
+        }
+
+        @media (min-width: 768px) {
+            .marquee-container {
+                padding: 1.5rem 0;
+            }
+
+            .marquee-content {
+                font-size: 2.5rem;
+                gap: 4rem;
+                padding-right: 4rem;
+            }
+        }
+
+        /* Cursor Media Reveal */
+        .hover-reveal-img {
+            position: fixed;
+            width: 280px;
+            height: 360px;
+            object-fit: cover;
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.8) translate(0, 0) rotate(-5deg);
+            z-index: 9998;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 4px solid #FEF6E4;
+        }
+
+        .word-hover {
+            position: relative;
+            color: #F59E0B;
+            display: inline-block;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .word-hover::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 1px;
+            background: #F59E0B;
+            transform: scaleX(0.3);
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+
+        .word-hover:hover {
+            color: #EC4899;
+        }
+
+        .word-hover:hover::after {
+            transform: scaleX(1);
+            background: #EC4899;
+        }
+
+        /* Track Player Showcase UI */
+        .track-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .track-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(245, 158, 11, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #F59E0B;
+            color: #120B0A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .track-card:hover .play-btn {
+            transform: scale(1.05);
+        }
+
+        .play-icon {
+            transition: transform 0.2s;
+        }
+
+        .waveform-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 30px;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+            overflow: hidden;
+        }
+
+        .track-card.playing .waveform-container {
+            opacity: 1;
+        }
+
+        .wave-bar-lg {
+            width: 4px;
+            background: #FEF6E4;
+            border-radius: 2px;
+            height: 6px;
+            transition: height 0.1s ease;
+        }
+
+        .track-card.playing .wave-bar-lg {
+            animation: eqPlay 0.6s infinite alternate ease-in-out;
+            background: #F59E0B;
+        }
+
+        .track-card.playing .wave-bar-lg:nth-child(even) {
+            animation-delay: 0.2s;
+            animation-duration: 0.7s;
+        }
+
+        .track-card.playing .wave-bar-lg:nth-child(3n) {
+            animation-delay: 0.4s;
+            animation-duration: 0.5s;
+            background: #EC4899;
+        }
+
+        .track-card.playing .wave-bar-lg:nth-child(5n) {
+            animation-delay: 0.1s;
+            animation-duration: 0.8s;
+            background: #FCD34D;
+        }
+
+        @keyframes eqPlay {
+            0% {
+                height: 6px;
+            }
+
+            100% {
+                height: 28px;
+            }
+        }
+
+        /* Floating Button Glow */
+        .fab-glow {
+            box-shadow: 0 0 25px rgba(37, 211, 102, 0.4);
+        }
+
+        .fab-glow:hover {
+            box-shadow: 0 0 40px rgba(37, 211, 102, 0.7);
+        }
+
+        /* Pulse Animation for WA Icon Transition */
+        @keyframes pulse-wa {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 40px rgba(37, 211, 102, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+
+        .animate-pulse-wa {
+            animation: pulse-wa 1.5s infinite;
+        }
+
+        /* MOBILE OVERRIDES */
+        @media (max-width: 1024px) {
+            body {
+                cursor: auto;
+            }
+
+            a,
+            button,
+            .word-hover,
+            .track-card {
+                cursor: pointer;
+            }
+
+            .cursor-dot,
+            .cursor-outline {
+                display: none !important;
+            }
+
+            .hover-reveal-img {
+                width: 75vw;
+                max-width: 300px;
+                height: auto;
+                aspect-ratio: 4/5;
+                left: 50% !important;
+                top: 50% !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-accent selection:text-dark">
+
+    <div id="wa-transition"
+        class="fixed inset-0 z-[100000] bg-dark/95 backdrop-blur-xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500">
+        <div id="wa-icon-container"
+            class="scale-50 opacity-0 bg-[#25D366] text-white w-24 h-24 rounded-full flex items-center justify-center mb-6">
+            <i class="fa-brands fa-whatsapp text-5xl"></i>
+        </div>
+        <h2 id="wa-text"
+            class="text-xl md:text-2xl font-sans tracking-[0.3em] text-light uppercase opacity-0 translate-y-4 font-light">
+            Connecting...</h2>
+    </div>
+
+    <div class="noise-overlay"></div>
+    <div class="aura-1"></div>
+    <div class="aura-2"></div>
+
+    <img src="" alt="Hover Reveal" id="hover-reveal-img" class="hover-reveal-img">
+
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <nav
+        class="fixed top-0 w-full z-50 px-6 py-4 md:py-6 nav-anim opacity-0 -translate-y-full backdrop-blur-sm bg-dark/40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-serif tracking-widest text-light">Alex<span class="text-accent">.</span></div>
+            <a href="https://wa.me/1234567890"
+                class="wa-cta magnetic hover-target px-5 md:px-6 py-2 border border-accent/40 rounded-full text-xs font-sans tracking-[0.2em] uppercase text-accent hover:bg-accent hover:text-dark transition-colors duration-500 flex items-center gap-2">
+                <i class="fa-brands fa-whatsapp"></i> Contact
+            </a>
+        </div>
+    </nav>
+
+    <a href="https://wa.me/1234567890" id="floating-fab"
+        class="wa-cta magnetic hover-target fixed bottom-8 right-6 md:right-8 z-50 bg-[#25D366] text-white w-14 h-14 md:w-16 md:h-16 rounded-full fab-glow flex items-center justify-center group invisible opacity-0">
+        <i
+            class="fa-brands fa-whatsapp text-2xl md:text-3xl group-hover:scale-110 transition-transform duration-300"></i>
+    </a>
+
+    <section class="relative min-h-screen flex flex-col justify-center px-6 overflow-hidden pb-10" id="hero-section">
+        <div class="hero-bg" id="heroBg"></div>
+        <canvas id="particle-canvas"></canvas>
+
+        <div class="max-w-7xl mx-auto w-full z-10 pt-24 md:pt-10 hero-content text-center md:text-left">
+            <div class="reveal-text mb-6 md:mb-8">
+                <span
+                    class="reveal-inner text-[10px] md:text-xs font-sans tracking-[0.4em] uppercase text-accent border border-accent/30 bg-accent/10 px-5 py-2.5 rounded-full backdrop-blur-md inline-block">
+                    150+ Custom Songs Crafted
+                </span>
+            </div>
+
+            <h1
+                class="text-5xl md:text-8xl lg:text-[7rem] font-serif mb-6 font-light max-w-5xl tracking-tight leading-[1.15]">
+                <div class="reveal-text"><span class="reveal-inner">Turn your story</span></div>
+                <div class="reveal-text"><span class="reveal-inner italic text-light/90">into a song.</span></div>
+            </h1>
+
+            <div class="reveal-text mb-10 md:mb-12 flex justify-center md:justify-start">
+                <p
+                    class="reveal-inner text-lg md:text-2xl text-light/70 font-sans font-light max-w-2xl leading-relaxed">
+                    Personalized acoustic music crafted from your raw memories, inside jokes, and cherished moments. A
+                    truly unforgettable gift.
+                </p>
+            </div>
+
+            <div
+                class="flex flex-col sm:flex-row items-center gap-4 md:gap-6 hero-btns opacity-0 justify-center md:justify-start">
+                <a href="https://wa.me/1234567890"
+                    class="wa-cta magnetic hover-target bg-accent text-dark font-sans font-semibold text-sm tracking-[0.1em] uppercase py-4 md:py-5 px-8 md:px-10 rounded-full hover:bg-yellow-400 transition-colors duration-500 flex items-center gap-3 w-full sm:w-auto justify-center shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Request on WhatsApp
+                </a>
+                <button
+                    class="magnetic hover-target bg-dark/40 backdrop-blur-md border border-light/20 text-light font-sans text-sm tracking-[0.1em] uppercase py-4 md:py-5 px-8 md:px-10 rounded-full hover:border-accent hover:text-accent transition-colors duration-500 flex items-center gap-4 w-full sm:w-auto justify-center group"
+                    onclick="document.getElementById('samples-section').scrollIntoView({behavior: 'smooth'})">
+                    <div class="visualizer opacity-50 group-hover:opacity-100 transition-opacity">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    Listen to Samples
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div class="marquee-container relative z-10 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+        <div class="marquee-content" id="marquee-1">
+            <span>YOUR STORY IN A SONG</span> <span class="text-rose">✦</span>
+            <span>SHARE THE JOY</span> <span class="text-rose">✦</span>
+            <span>UNFORGETTABLE MEMORIES</span> <span class="text-rose">✦</span>
+            <span>CELEBRATE LOVE</span> <span class="text-rose">✦</span>
+        </div>
+        <div class="marquee-content" id="marquee-2">
+            <span>YOUR STORY IN A SONG</span> <span class="text-rose">✦</span>
+            <span>SHARE THE JOY</span> <span class="text-rose">✦</span>
+            <span>UNFORGETTABLE MEMORIES</span> <span class="text-rose">✦</span>
+            <span>CELEBRATE LOVE</span> <span class="text-rose">✦</span>
+        </div>
+    </div>
+
+    <section class="py-24 md:py-40 px-6 relative z-10 border-b border-white/5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-24">
+            <div
+                class="w-full md:w-5/12 h-[450px] md:h-[700px] overflow-hidden rounded-2xl relative shadow-2xl shadow-accent/10 border border-white/5">
+                <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                    alt="Musician smiling outdoors"
+                    class="w-full h-full object-cover scale-110 img-parallax image-reveal">
+            </div>
+
+            <div class="w-full md:w-7/12">
+                <h2 class="text-4xl md:text-7xl font-serif mb-6 md:mb-8 font-light scroll-text">Hi, I'm Alex.</h2>
+                <p class="text-light/80 text-lg md:text-xl font-sans font-light leading-relaxed mb-6 scroll-text">
+                    I believe the best music isn't found on a chart; it's found in the beautiful, chaotic, and quiet
+                    moments between people. I translate your specific memories into a professional soundtrack.
+                </p>
+                <p
+                    class="text-light/80 text-lg md:text-xl font-sans font-light leading-relaxed mb-10 md:mb-12 scroll-text">
+                    Whether it is a heartfelt <span class="word-hover hover-target"
+                        data-img="https://plus.unsplash.com/premium_photo-1664533227575-560c4ff393d2?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">apology</span>,
+                    a joyous <span class="word-hover hover-target"
+                        data-img="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80">wedding
+                        vow</span>, or an uplifting <span class="word-hover hover-target"
+                        data-img="https://images.unsplash.com/photo-1558636508-e0db3814bd1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80">birthday
+                        surprise</span>, I craft an organic song that belongs entirely to you. No templates. Just your
+                    truth, set to music.
+                </p>
+                <div class="border-l-2 border-accent pl-6 md:pl-8 scroll-text">
+                    <p class="italic font-serif text-xl md:text-3xl text-light leading-snug">"A song is a feeling you
+                        can press play on, forever."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pt-24 pb-20 px-6 relative z-10" id="process-section">
+        <div
+            class="max-w-4xl mx-auto relative bg-dark/60 backdrop-blur-xl p-8 md:p-16 rounded-3xl border border-white/5 shadow-2xl shadow-rose/5">
+            <div class="mb-20 md:mb-24 text-center">
+                <h2 class="text-4xl md:text-6xl font-serif mb-4 font-light scroll-text">The Journey.</h2>
+                <p class="text-accent text-sm md:text-lg font-sans font-medium tracking-widest uppercase scroll-text">
+                    Four simple steps to your song</p>
+            </div>
+
+            <div class="relative ml-4 md:ml-12">
+                <div class="absolute left-[11px] top-0 bottom-0 w-[2px] bg-white/10 rounded-full"></div>
+                <div class="absolute left-[11px] top-0 w-[2px] bg-gradient-to-b from-accent to-rose shadow-[0_0_15px_#F59E0B] origin-top scale-y-0 rounded-full"
+                    id="scroll-progress-line"></div>
+
+                <div class="mb-16 md:mb-20 pl-10 md:pl-12 relative step-item group">
+                    <div
+                        class="absolute -left-1 top-1.5 w-6 h-6 bg-dark border-2 border-white/20 rounded-full flex items-center justify-center step-dot transition-colors duration-500 z-10">
+                        <div class="w-2 h-2 bg-accent rounded-full opacity-0 dot-inner shadow-[0_0_10px_#F59E0B]"></div>
+                    </div>
+                    <div
+                        class="text-[10px] md:text-xs tracking-[0.3em] font-sans text-accent mb-2 uppercase font-semibold">
+                        Step 01</div>
+                    <h3
+                        class="text-2xl md:text-3xl font-serif mb-3 text-light group-hover:text-accent transition-colors">
+                        Share the Emotion</h3>
+                    <p class="text-light/60 font-sans font-light leading-relaxed text-base md:text-lg">Click the
+                        WhatsApp button and tell me about the occasion, the person, and the story you want to preserve.
+                    </p>
+                </div>
+
+                <div class="mb-16 md:mb-20 pl-10 md:pl-12 relative step-item group">
+                    <div
+                        class="absolute -left-1 top-1.5 w-6 h-6 bg-dark border-2 border-white/20 rounded-full flex items-center justify-center step-dot transition-colors duration-500 z-10">
+                        <div class="w-2 h-2 bg-accent rounded-full opacity-0 dot-inner shadow-[0_0_10px_#F59E0B]"></div>
+                    </div>
+                    <div
+                        class="text-[10px] md:text-xs tracking-[0.3em] font-sans text-accent mb-2 uppercase font-semibold">
+                        Step 02</div>
+                    <h3
+                        class="text-2xl md:text-3xl font-serif mb-3 text-light group-hover:text-accent transition-colors">
+                        The Details</h3>
+                    <p class="text-light/60 font-sans font-light leading-relaxed text-base md:text-lg">I reply instantly
+                        with a transparent quote, project scope, and a precise delivery timeline. No hidden surprises.
+                    </p>
+                </div>
+
+                <div class="mb-16 md:mb-20 pl-10 md:pl-12 relative step-item group">
+                    <div
+                        class="absolute -left-1 top-1.5 w-6 h-6 bg-dark border-2 border-white/20 rounded-full flex items-center justify-center step-dot transition-colors duration-500 z-10">
+                        <div class="w-2 h-2 bg-accent rounded-full opacity-0 dot-inner shadow-[0_0_10px_#F59E0B]"></div>
+                    </div>
+                    <div
+                        class="text-[10px] md:text-xs tracking-[0.3em] font-sans text-accent mb-2 uppercase font-semibold">
+                        Step 03</div>
+                    <h3
+                        class="text-2xl md:text-3xl font-serif mb-3 text-light group-hover:text-accent transition-colors">
+                        Studio Magic</h3>
+                    <p class="text-light/60 font-sans font-light leading-relaxed text-base md:text-lg">I meticulously
+                        write, compose, and record your track, ensuring the melody matches the warmth of your story.</p>
+                </div>
+
+                <div class="pl-10 md:pl-12 relative step-item group">
+                    <div
+                        class="absolute -left-1 top-1.5 w-6 h-6 bg-dark border-2 border-white/20 rounded-full flex items-center justify-center step-dot transition-colors duration-500 z-10">
+                        <div class="w-2 h-2 bg-accent rounded-full opacity-0 dot-inner shadow-[0_0_10px_#F59E0B]"></div>
+                    </div>
+                    <div
+                        class="text-[10px] md:text-xs tracking-[0.3em] font-sans text-accent mb-2 uppercase font-semibold">
+                        Step 04</div>
+                    <h3
+                        class="text-2xl md:text-3xl font-serif mb-3 text-light group-hover:text-accent transition-colors">
+                        Special Delivery</h3>
+                    <p class="text-light/60 font-sans font-light leading-relaxed text-base md:text-lg">You receive a
+                        pristine, master-quality audio file, ready to be gifted, shared, or played at your special
+                        event.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 md:py-32 px-6 relative z-10 bg-dark/30 border-y border-white/5" id="samples-section">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center md:text-left mb-16">
+                <h2 class="text-4xl md:text-6xl font-serif mb-4 font-light scroll-text">The Showcase.</h2>
+                <p class="text-light/60 text-lg font-sans font-light scroll-text max-w-xl">Listen to excerpts of real
+                    stories turned into music. Select a track to hear the magic.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-text">
+
+                <div class="track-card p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover-target"
+                    onclick="togglePlay(this)">
+                    <div class="play-btn shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                        <i class="fa-solid fa-play ml-1 play-icon text-xl"></i>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <h4 class="text-xl md:text-2xl font-serif text-light mb-1">A Promise to Sarah</h4>
+                        <p class="text-[10px] md:text-xs font-sans tracking-[0.2em] text-accent uppercase mb-4">10th
+                            Anniversary • Acoustic Guitar</p>
+                        <div class="waveform-container w-full">
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover-target"
+                    onclick="togglePlay(this)">
+                    <div class="play-btn shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                        <i class="fa-solid fa-play ml-1 play-icon text-xl"></i>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <h4 class="text-xl md:text-2xl font-serif text-light mb-1">The Day We Met</h4>
+                        <p class="text-[10px] md:text-xs font-sans tracking-[0.2em] text-rose uppercase mb-4">Wedding
+                            Vows • Piano & Strings</p>
+                        <div class="waveform-container w-full">
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover-target"
+                    onclick="togglePlay(this)">
+                    <div class="play-btn shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                        <i class="fa-solid fa-play ml-1 play-icon text-xl"></i>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <h4 class="text-xl md:text-2xl font-serif text-light mb-1">I'm Sorry, Mark</h4>
+                        <p class="text-[10px] md:text-xs font-sans tracking-[0.2em] text-accent uppercase mb-4">Apology
+                            • Raw Vocals</p>
+                        <div class="waveform-container w-full">
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover-target"
+                    onclick="togglePlay(this)">
+                    <div class="play-btn shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                        <i class="fa-solid fa-play ml-1 play-icon text-xl"></i>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <h4 class="text-xl md:text-2xl font-serif text-light mb-1">25 Years of Us</h4>
+                        <p class="text-[10px] md:text-xs font-sans tracking-[0.2em] text-rose uppercase mb-4">Silver
+                            Jubilee • Full Band</p>
+                        <div class="waveform-container w-full">
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                            <div class="wave-bar-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+<section class="relative py-32 md:py-48 flex flex-col items-center justify-center px-6 overflow-hidden border-t border-white/5" id="outro-section">
+        
+        <div class="absolute inset-0 z-0 opacity-30">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-dark z-10"></div>
+            <img src="https://images.unsplash.com/photo-1470071131384-001b85755536?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Serene forest environment" class="w-full h-full object-cover img-parallax">
+        </div>
+
+        <div class="relative z-10 text-center max-w-4xl mx-auto flex flex-col items-center">
+            
+            <div class="scroll-text mb-6 md:mb-10 inline-block px-5 py-2 border border-white/10 rounded-full backdrop-blur-md text-white/50 text-[10px] md:text-xs font-sans tracking-[0.3em] uppercase">
+                Let's Create Together
+            </div>
+
+            <h2 class="text-5xl md:text-7xl lg:text-8xl font-serif mb-6 md:mb-10 font-light text-light scroll-text leading-[1.1]">
+                Ready to hear <br class="hidden md:block"> <span class="italic text-accent">your story?</span>
+            </h2>
+            
+            <p class="scroll-text text-light/60 font-sans font-light text-base md:text-xl mb-12 max-w-xl leading-relaxed mx-auto">
+                Drop a message. We'll talk about your memories, the exact emotions you want to capture, and bring it all to life.
+            </p>
+
+            <a href="https://wa.me/1234567890" class="wa-cta magnetic hover-target group relative overflow-hidden bg-light text-dark font-sans font-medium text-xs md:text-sm tracking-[0.15em] uppercase py-5 px-10 md:py-6 md:px-14 rounded-full transition-all duration-500 flex items-center justify-center gap-4 scroll-text shadow-[0_0_30px_rgba(254,246,228,0.1)] hover:shadow-[0_0_50px_rgba(245,158,11,0.4)] w-full sm:w-auto">
+                <span class="relative z-10 flex items-center gap-3 group-hover:text-dark transition-colors duration-300">
+                    <i class="fa-brands fa-whatsapp text-lg md:text-xl"></i> Start the Conversation
+                </span>
+                <div class="absolute inset-0 bg-accent transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500 ease-out z-0"></div>
+            </a>
+            
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- WhatsApp Click Animation Transition ---
+        document.querySelectorAll('.wa-cta').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                const transition = document.getElementById('wa-transition');
+                const icon = document.getElementById('wa-icon-container');
+                const text = document.getElementById('wa-text');
+
+                // Show overlay
+                transition.classList.remove('pointer-events-none');
+                transition.classList.replace('opacity-0', 'opacity-100');
+
+                // Animate elements in
+                icon.classList.add('animate-pulse-wa');
+                gsap.to(icon, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.5)", delay: 0.1 });
+                gsap.to(text, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out", delay: 0.3 });
+
+                // Redirect
+                setTimeout(() => {
+                    window.open(url, '_blank');
+
+                    // Hide overlay after a bit so it's gone if they swipe back to the browser
+                    setTimeout(() => {
+                        transition.classList.replace('opacity-100', 'opacity-0');
+                        transition.classList.add('pointer-events-none');
+                        icon.classList.remove('animate-pulse-wa');
+                        gsap.set(icon, { scale: 0.5, opacity: 0 });
+                        gsap.set(text, { y: 16, opacity: 0 });
+                    }, 800);
+                }, 1500); // 1.5 second cinematic hold
+            });
+        });
+
+        // --- Viewport / Device Detection ---
+        let isMobile = window.innerWidth < 1024;
+        window.addEventListener('resize', () => isMobile = window.innerWidth < 1024);
+
+        // --- Track Player Functionality ---
+        function togglePlay(card) {
+            const isPlaying = card.classList.contains('playing');
+
+            // Pause all tracks
+            document.querySelectorAll('.track-card').forEach(c => {
+                c.classList.remove('playing');
+                const icon = c.querySelector('.play-icon');
+                icon.classList.replace('fa-pause', 'fa-play');
+                icon.classList.add('ml-1'); // Re-center play icon visually
+            });
+
+            // If it wasn't playing before, play it now
+            if (!isPlaying) {
+                card.classList.add('playing');
+                const icon = card.querySelector('.play-icon');
+                icon.classList.replace('fa-play', 'fa-pause');
+                icon.classList.remove('ml-1');
+            }
+        }
+
+        // --- Custom Cursor & Hover Reveals ---
+        const cursorDot = document.getElementById("cursor-dot");
+        const cursorOutline = document.getElementById("cursor-outline");
+        const revealImg = document.getElementById("hover-reveal-img");
+        let mouseX = 0, mouseY = 0, outlineX = 0, outlineY = 0;
+
+        window.addEventListener("mousemove", (e) => {
+            mouseX = e.clientX; mouseY = e.clientY;
+            if (!isMobile) {
+                cursorDot.style.left = `${mouseX}px`; cursorDot.style.top = `${mouseY}px`;
+                revealImg.style.left = `${mouseX + 20}px`; revealImg.style.top = `${mouseY + 20}px`;
+            }
+        });
+
+        gsap.ticker.add(() => {
+            if (!isMobile) {
+                outlineX += (mouseX - outlineX) * 0.15; outlineY += (mouseY - outlineY) * 0.15;
+                cursorOutline.style.left = `${outlineX}px`; cursorOutline.style.top = `${outlineY}px`;
+            }
+        });
+
+        document.querySelectorAll('.hover-target').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+        });
+
+        // Word Hover (Centered on mobile, trailing on desktop)
+        document.querySelectorAll('.word-hover').forEach(word => {
+            word.addEventListener('mouseenter', () => {
+                revealImg.src = word.getAttribute('data-img');
+                revealImg.style.opacity = 1;
+                if (isMobile) {
+                    revealImg.style.transform = 'translate(-50%, -50%) scale(1)';
+                } else {
+                    revealImg.style.transform = 'scale(1) translate(0, 0) rotate(2deg)';
+                }
+            });
+            word.addEventListener('mouseleave', () => {
+                revealImg.style.opacity = 0;
+                if (isMobile) {
+                    revealImg.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                } else {
+                    revealImg.style.transform = 'scale(0.8) translate(0, 0) rotate(-5deg)';
+                }
+            });
+        });
+
+        // --- Magnetic Buttons ---
+        document.querySelectorAll('.magnetic').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                if (isMobile) return; // Disable magnetic effect on touch
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                gsap.to(btn, { x: x * 0.3, y: y * 0.3, duration: 0.3, ease: "power2.out" });
+            });
+            btn.addEventListener('mouseleave', () => {
+                gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+
+        // --- Cheerful Firefly Particles ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const colors = ['245, 158, 11', '236, 72, 153', '252, 211, 77', '254, 246, 228'];
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = Math.random() * 0.4 - 0.2; this.speedY = Math.random() * 0.4 - 0.2;
+                this.opacity = Math.random() * 0.6 + 0.1;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // --- Initial Load Animations ---
+        const tl = gsap.timeline();
+        tl.to(".reveal-inner", { y: 0, duration: 1.2, stagger: 0.1, ease: "power4.out", delay: 0.2 })
+            .to(".hero-btns", { opacity: 1, y: 0, duration: 1, ease: "power2.out" }, "-=0.8")
+            .to(".nav-anim", { opacity: 1, y: 0, scale: 1, duration: 1, stagger: 0.2, ease: "power3.out" }, "-=1");
+
+        // Hero Scroll Animation
+        gsap.to("#heroBg", {
+            yPercent: 30, ease: "none",
+            scrollTrigger: { trigger: "#hero-section", start: "top top", end: "bottom top", scrub: true }
+        });
+        gsap.to(".hero-content", {
+            y: 100, opacity: 0, ease: "none",
+            scrollTrigger: { trigger: "#hero-section", start: "top top", end: "bottom 30%", scrub: true }
+        });
+
+        // --- Smart Floating FAB ---
+        let mm = gsap.matchMedia();
+        mm.add("(max-width: 767px)", () => {
+            gsap.set("#floating-fab", { autoAlpha: 0, scale: 0 });
+            gsap.to("#floating-fab", {
+                scrollTrigger: { trigger: "#hero-section", start: "bottom 80%", toggleActions: "play none none reverse" },
+                autoAlpha: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)"
+            });
+        });
+        mm.add("(min-width: 768px)", () => {
+            gsap.set("#floating-fab", { autoAlpha: 0, scale: 0 });
+            gsap.to("#floating-fab", {
+                scrollTrigger: { trigger: "#hero-section", start: "bottom 90%", toggleActions: "play none none reverse" },
+                autoAlpha: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)"
+            });
+        });
+
+        // Marquee Animation
+        gsap.to("#marquee-1", { xPercent: -100, repeat: -1, duration: 30, ease: "linear" });
+        gsap.to("#marquee-2", { xPercent: -100, repeat: -1, duration: 30, ease: "linear" });
+
+        // Advanced Image Reveal
+        gsap.to(".image-reveal", {
+            clipPath: "inset(0% 0 0 0)", duration: 1.5, ease: "power4.inOut",
+            scrollTrigger: { trigger: ".image-reveal", start: "top 80%" }
+        });
+        gsap.to(".img-parallax", {
+            yPercent: -10, ease: "none",
+            scrollTrigger: { trigger: ".img-parallax", start: "top bottom", end: "bottom top", scrub: true }
+        });
+
+        // Scroll Texts
+        gsap.utils.toArray('.scroll-text').forEach(text => {
+            gsap.fromTo(text,
+                { y: 40, opacity: 0 },
+                { scrollTrigger: { trigger: text, start: "top 85%" }, y: 0, opacity: 1, duration: 1, ease: "power3.out" }
+            );
+        });
+
+        // Dynamic Scroll Line for Process Section
+        const processSection = document.getElementById('process-section');
+        const scrollLine = document.getElementById('scroll-progress-line');
+        gsap.to(scrollLine, {
+            scaleY: 1, ease: "none",
+            scrollTrigger: { trigger: processSection, start: "top center", end: "bottom center", scrub: true }
+        });
+
+        // Step Dots Lighting Up
+        gsap.utils.toArray('.step-item').forEach((step) => {
+            const dot = step.querySelector('.dot-inner');
+            const ring = step.querySelector('.step-dot');
+
+            gsap.timeline({ scrollTrigger: { trigger: step, start: "top 65%" } })
+                .fromTo(step, { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" })
+                .to(ring, { borderColor: '#F59E0B' }, "-=0.6")
+                .to(dot, { opacity: 1, scale: 1.4, duration: 0.5, ease: "back.out(2)" }, "-=0.4");
+        });
+    </script>
+</body>
+
+</html>
